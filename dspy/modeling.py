@@ -1,7 +1,7 @@
 # Importo librerias
 import pandas as pd
 
-def train(df):
+def train_naive_bayes(df):
     """
     Entrena un modelo de Naive Bayes determinando las probibilades correspondientes.
     :param df: Dataframe train. Columnas: cualquier numero de variables dependientes y, necesiaramente al final, la
@@ -38,7 +38,7 @@ def train(df):
                 df_prob.loc[clase, col_name] = numerador / denominador
     return df_prob
 
-def predict(df_prob, df_test, col_prob_clase=False):  # que el usuario me pasa el df_train y el df_test y yo haga el resto?
+def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # que el usuario me pasa el df_train y el df_test y yo haga el resto?
     """
     Predice la clase de cada nuevo registro usando el modelo entrenado de Naive Bayes.
     :param df_prob: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma.

@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: dsmlpy
+Version: 0.0.1
+Summary: Librería para desarrollar proyectos de Ciencia de datos (data science)
+Home-page: https://github.com/nachomondino1/dspy-base
+Author: Ignacio Fabian Mondino
+Author-email: nachomondino1@gmail.com
+License: MIT
+Description: # dspy-base
+         
+        
+Platform: UNKNOWN
+Description-Content-Type: text/markdown

@@ -5,21 +5,18 @@ from setuptools import find_packages, setup
 HERE = pathlib.Path(__file__).parent
 
 VERSION = '0.0.1'  # Muy importante, deberéis ir cambiando la versión de vuestra librería según incluyáis nuevas funcionalidades
-PACKAGE_NAME = 'dspy'  # Debe coincidir con el nombre de la carpeta
+PACKAGE_NAME = 'dsmlpy'  # Debe coincidir con el nombre de la carpeta
 AUTHOR = 'Ignacio Fabian Mondino'
 AUTHOR_EMAIL = 'nachomondino1@gmail.com'
-URL = 'https://github.com/nachomondino1'
-
+URL = 'https://github.com/nachomondino1/dspy-base'
 LICENSE = 'MIT'  # Tipo de licencia
 DESCRIPTION = 'Librería para desarrollar proyectos de Ciencia de datos (data science)'  # Descripción corta
 LONG_DESCRIPTION = (HERE / "README.md").read_text(encoding='utf-8')  # Referencia al documento README con una descripción más elaborada
 LONG_DESC_TYPE = "text/markdown"
-
-
-#Paquetes necesarios para que funcione la libreía. Se instalarán a la vez si no lo tuvieras ya instalado
 INSTALL_REQUIRES = [
       'pandas'
-      ]
+      ]  #Paquetes necesarios para que funcione la libreía. Se instalarán a la vez si no lo tuvieras ya instalado
+
 
 setup(
     name=PACKAGE_NAME,
