@@ -111,69 +111,60 @@ def login_website(driver, user, password, xpath_user, xpath_pass, xpath_boton_lo
     boton_iniciar_sesion = driver.find_element(By.XPATH, xpath_boton_login)
     boton_iniciar_sesion.click()
 
-# BOTON CARGAR MAS
-def click_load_more_button(self):
+def extract_items(driver, xpath_items):
     """
-    Click en boton cargar mas canales
-    """
-    # Definicion de variables
-    cant_clicks = 0
-
-    while True:
-        # Intento hacer click en boton "Cargar mas canales"
-        try:
-            boton = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, 'XPATH_button')))
-            boton.click()
-            cant_clicks += 1
-        except:
-            print("Se hicieron {} clicks en boton 'cargar mas canales'".format(cant_clicks))
-            break
-
-class Field():
-
-    def __init__(self, name, xpath):
-        self.name = name
-        self.xpath = xpath
-
-    def extract_field(self, item):
-        """
-        Extrae field
-        :param <param_name>: <param description>
-        :return: String con field, en caso contrario, None
-        """
-        # Intento extraer el campo
-        try:
-            # Extraigo campo
-            field = item.find_element(By.XPATH, self.xpath).text
-            return field
-
-        # Si falla la extraccion del campo, retorno None
-        except:
-            print("Fallo la extraccion del campo {}".format(self.name))
-            return None
-
-
-# PAGINATION
-# Tipo 1:
-def get_pagination_url(self):
-    """
-    Obtiene url de siguiente pagina si la pagina tiene link asociado
+    Extrae items de una pagina
+    :return:
     """
     try:
-        url = self.driver.find_element(By.XPATH, '<XPATH>').get_attribute('href')
-        return url
+        l_items = driver.find_elements(By.XPATH, xpath_items)
+        print("Cantidad de items: {}".format(len(l_items)))
     except:
-        print("No pudo hacer el click en la siguiente pagina")
+        l_items = []
+        print("Fallo extraccion de items")
+    return l_items
+
+def extract_field(item, xpath):
+    """
+    Extrae field
+    :param <param_name>: <param description>
+    :return: String con field, en caso contrario, None
+    """
+    # Intento extraer el campo
+    try:
+        # Extraigo campo
+        field = item.find_element(By.XPATH, xpath).text
+        return field
+
+    # Si falla la extraccion del campo, retorno None
+    except:
+        print("Fallo la extraccion del campo")
         return None
 
-# Tipo 2:
-def get_pagination_zocalo_button(self):
+def click_boton(driver, xpath_boton):
     """
     Obtiene url de siguiente pagina si la pagina no tiene link asociado y es solo un boton
     """
     try:
-        boton_siguiente_pagina = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH,'<XPATH_boton>')))
-        return boton_siguiente_pagina
+        boton = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, xpath_boton)))
+
+        try:
+            boton.click()
+        except:
+            driver.execute_script("arguments[0].click()", boton)
+    except:
+        print("No se encontro el xpath del boton")
+        return None
+
+# PAGINATION
+# Tipo 1:
+def get_pagination_url(driver, xpath_url):
+    """
+    Obtiene url de siguiente pagina si la pagina tiene link asociado
+    """
+    try:
+        url = driver.find_element(By.XPATH, xpath_url).get_attribute('href')
+        return url
     except:
         print("No pudo hacer el click en la siguiente pagina")
         return None
@@ -194,7 +185,7 @@ def get_pagination_drop_down_list_button(self):
         print("No hay mas paginas")
         return None
 
-def ScrollDown(self):
+def scroll_down(driver):
     """
     Carga todos los elementos en una pagina al deslizar el driver hacia abajo hasta el final
     :return:
@@ -203,23 +194,22 @@ def ScrollDown(self):
     SCROLL_PAUSE_TIME = random.uniform(1, 2)
 
     # Get scroll height
-    last_height = self.driver.execute_script("return document.body.scrollHeight")
+    last_height = driver.execute_script("return document.body.scrollHeight")
     print("Last: ", last_height)
     while True:
         # Scroll down to bottom
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         # Wait to load page
         sleep(SCROLL_PAUSE_TIME)
 
         # Calculate new scroll height and compare with last scroll height
-        new_height = self.driver.execute_script("return document.body.scrollHeight")
+        new_height = driver.execute_script("return document.body.scrollHeight")
         print("New: ", new_height)
 
         if new_height == last_height:
             break
         last_height = new_height
-
 
 
 
@@ -324,24 +314,6 @@ def convert_hour_AM_PM_to_24hs(hora_string):
         print("\t No se pudo convertir la hora {} de AM/PM a 24 hs. Es posible que la hora ya es en formato 24 hs".format(hora_string))
         return hora_string
 
-def split_hour_string(hora_string):
-    """
-    A partir de la hora en string (e.g. 08:30 AM, 20:30), se obtiene hora y minuto (por separado) en formato entero
-    :param hora_string: String. Hora en formato (e.g. 08:30 AM, 15:50, ecc)
-    :return: Integer & Integer. Hora y minuto en formato entero. En caso de que falla la obtencion, None & None
-    """
-    # Transforma (solo si es necesario) la hora desde AM/PM (e.g. 08:30 PM) a 24 hs (e.g. 20:30)
-    hora_string = convert_hour_AM_PM_to_24hs(hora_string)
-
-    # Intento extraer hora y minuto del string
-    try:
-        hora, min = hora_string.split(":")  # Obtengo hora y min por separado
-        return int(hora), int(min)
-    # Si falla la extraccion de hora y minuto del string
-    except:
-        print("La hora {} no tiene el formato %I:%M".format(hora_string))
-        return None, None
-
 def split_date_string(fecha_string):
     """
     A partir de fecha en formato string, se obtiene los elementos (dia, mes y año) de la fecha por separado en formato
@@ -364,6 +336,23 @@ def split_date_string(fecha_string):
         print("Fallo la conversion de la fecha {} de string a integer".format(fecha_string))  # Mensaje de aviso
         return None, None, None
 
+def split_hour_string(hora_string):
+    """
+    A partir de la hora en string (e.g. 08:30 AM, 20:30), se obtiene hora y minuto (por separado) en formato entero
+    :param hora_string: String. Hora en formato (e.g. 08:30 AM, 15:50, ecc)
+    :return: Integer & Integer. Hora y minuto en formato entero. En caso de que falla la obtencion, None & None
+    """
+    # Transforma (solo si es necesario) la hora desde AM/PM (e.g. 08:30 PM) a 24 hs (e.g. 20:30)
+    hora_string = convert_hour_AM_PM_to_24hs(hora_string)
+
+    # Intento extraer hora y minuto del string
+    try:
+        hora, min = hora_string.split(":")  # Obtengo hora y min por separado
+        return int(hora), int(min)
+    # Si falla la extraccion de hora y minuto del string
+    except:
+        print("La hora {} no tiene el formato %I:%M".format(hora_string))
+        return None, None
 
 
 
@@ -382,16 +371,43 @@ def convert_hour_into_min(hora_string):  # Funcion auxiliar de get_duracion()
     n_min_total = int(n_horas) * 60 + int(n_min)
     return n_min_total
 
-def get_date_from_actual(fecha_act, delta_days):
+def get_date_from_actual(delta_days, date_format="%d/%m/%Y"):
     """
     Obtiene una fecha unos dias posterior a partir de la fecha actual
-    :param fecha_act: Datetime class, fecha actual
     :param delta_days: Integer, numero de dias posteriores a la fecha actual
-    :return: String, fecha producto de la adicion de delta dias a la fecha actual
+    :return: Datetime fecha. Delta dias respecto de la fecha actual.
     """
+    # Obtengo fecha actual
+    fecha_act = datetime.datetime.today()
+
     # Obtencion de siguiente fecha a partir de la actual
     next_fecha = fecha_act + datetime.timedelta(days=delta_days)
 
     # Formateo siguiente fecha tal que sea igual que en el XPATH de la pagina web
-    next_fecha = next_fecha.strftime("%d/%m/%Y")
+    next_fecha = next_fecha.strftime(date_format)
     return next_fecha
+
+
+'''
+class Field():
+
+    def __init__(self, name, xpath):
+        self.name = name
+
+    def extract_field(self, item, xpath):
+        """
+        Extrae field
+        :param <param_name>: <param description>
+        :return: String con field, en caso contrario, None
+        """
+        # Intento extraer el campo
+        try:
+            # Extraigo campo
+            field = item.find_element(By.XPATH, xpath).text
+            return field
+
+        # Si falla la extraccion del campo, retorno None
+        except:
+            print("Fallo la extraccion del campo {}".format(self.name))
+            return None
+'''
