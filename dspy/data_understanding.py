@@ -1,8 +1,6 @@
 import pandas as pd
 import datetime
 import re
-
-# Importo librerias
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -131,29 +129,35 @@ def click_load_more_button(self):
             print("Se hicieron {} clicks en boton 'cargar mas canales'".format(cant_clicks))
             break
 
-class Field():
+def extract_items(driver, xpath_items):
+    """
+    Extrae items de una pagina
+    :return:
+    """
+    try:
+        l_items = driver.find_elements(By.XPATH, xpath_items)
+        print("Cantidad de items: {}".format(len(l_items)))
+    except:
+        l_items = []
+        print("Fallo extraccion de items")
+    return l_items
 
-    def __init__(self, name, xpath):
-        self.name = name
-        self.xpath = xpath
+def extract_field(item, xpath):
+    """
+    Extrae field
+    :param <param_name>: <param description>
+    :return: String con field, en caso contrario, None
+    """
+    # Intento extraer el campo
+    try:
+        # Extraigo campo
+        field = item.find_element(By.XPATH, xpath).text
+        return field
 
-    def extract_field(self, item):
-        """
-        Extrae field
-        :param <param_name>: <param description>
-        :return: String con field, en caso contrario, None
-        """
-        # Intento extraer el campo
-        try:
-            # Extraigo campo
-            field = item.find_element(By.XPATH, self.xpath).text
-            return field
-
-        # Si falla la extraccion del campo, retorno None
-        except:
-            print("Fallo la extraccion del campo {}".format(self.name))
-            return None
-
+    # Si falla la extraccion del campo, retorno None
+    except:
+        print("Fallo la extraccion del campo")
+        return None
 
 # PAGINATION
 # Tipo 1:
@@ -326,24 +330,6 @@ def convert_hour_AM_PM_to_24hs(hora_string):
         print("\t No se pudo convertir la hora {} de AM/PM a 24 hs. Es posible que la hora ya es en formato 24 hs".format(hora_string))
         return hora_string
 
-def split_hour_string(hora_string):
-    """
-    A partir de la hora en string (e.g. 08:30 AM, 20:30), se obtiene hora y minuto (por separado) en formato entero
-    :param hora_string: String. Hora en formato (e.g. 08:30 AM, 15:50, ecc)
-    :return: Integer & Integer. Hora y minuto en formato entero. En caso de que falla la obtencion, None & None
-    """
-    # Transforma (solo si es necesario) la hora desde AM/PM (e.g. 08:30 PM) a 24 hs (e.g. 20:30)
-    hora_string = convert_hour_AM_PM_to_24hs(hora_string)
-
-    # Intento extraer hora y minuto del string
-    try:
-        hora, min = hora_string.split(":")  # Obtengo hora y min por separado
-        return int(hora), int(min)
-    # Si falla la extraccion de hora y minuto del string
-    except:
-        print("La hora {} no tiene el formato %I:%M".format(hora_string))
-        return None, None
-
 def split_date_string(fecha_string):
     """
     A partir de fecha en formato string, se obtiene los elementos (dia, mes y año) de la fecha por separado en formato
@@ -366,6 +352,23 @@ def split_date_string(fecha_string):
         print("Fallo la conversion de la fecha {} de string a integer".format(fecha_string))  # Mensaje de aviso
         return None, None, None
 
+def split_hour_string(hora_string):
+    """
+    A partir de la hora en string (e.g. 08:30 AM, 20:30), se obtiene hora y minuto (por separado) en formato entero
+    :param hora_string: String. Hora en formato (e.g. 08:30 AM, 15:50, ecc)
+    :return: Integer & Integer. Hora y minuto en formato entero. En caso de que falla la obtencion, None & None
+    """
+    # Transforma (solo si es necesario) la hora desde AM/PM (e.g. 08:30 PM) a 24 hs (e.g. 20:30)
+    hora_string = convert_hour_AM_PM_to_24hs(hora_string)
+
+    # Intento extraer hora y minuto del string
+    try:
+        hora, min = hora_string.split(":")  # Obtengo hora y min por separado
+        return int(hora), int(min)
+    # Si falla la extraccion de hora y minuto del string
+    except:
+        print("La hora {} no tiene el formato %I:%M".format(hora_string))
+        return None, None
 
 
 
@@ -384,16 +387,43 @@ def convert_hour_into_min(hora_string):  # Funcion auxiliar de get_duracion()
     n_min_total = int(n_horas) * 60 + int(n_min)
     return n_min_total
 
-def get_date_from_actual(fecha_act, delta_days):
+def get_date_from_actual(delta_days, date_format="%d/%m/%Y"):
     """
     Obtiene una fecha unos dias posterior a partir de la fecha actual
-    :param fecha_act: Datetime class, fecha actual
     :param delta_days: Integer, numero de dias posteriores a la fecha actual
-    :return: String, fecha producto de la adicion de delta dias a la fecha actual
+    :return: Datetime fecha. Delta dias respecto de la fecha actual.
     """
+    # Obtengo fecha actual
+    fecha_act = datetime.datetime.today()
+
     # Obtencion de siguiente fecha a partir de la actual
     next_fecha = fecha_act + datetime.timedelta(days=delta_days)
 
     # Formateo siguiente fecha tal que sea igual que en el XPATH de la pagina web
-    next_fecha = next_fecha.strftime("%d/%m/%Y")
+    next_fecha = next_fecha.strftime(date_format)
     return next_fecha
+
+
+'''
+class Field():
+
+    def __init__(self, name, xpath):
+        self.name = name
+
+    def extract_field(self, item, xpath):
+        """
+        Extrae field
+        :param <param_name>: <param description>
+        :return: String con field, en caso contrario, None
+        """
+        # Intento extraer el campo
+        try:
+            # Extraigo campo
+            field = item.find_element(By.XPATH, xpath).text
+            return field
+
+        # Si falla la extraccion del campo, retorno None
+        except:
+            print("Fallo la extraccion del campo {}".format(self.name))
+            return None
+'''

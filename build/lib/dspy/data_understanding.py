@@ -1,8 +1,6 @@
 import pandas as pd
 import datetime
 import re
-
-# Importo librerias
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -31,7 +29,7 @@ def inicialize_chrome_driver(headless=False, path=None):
     options.add_argument("--disable-gpu")
     options.add_argument("--incognito")
     options.add_argument("--disable-popup-blocking")
-    
+
     # Si el usuario quiere que no se abra un web browser
     if headless:
         options.add_argument("--headless")  # Hace que no se abra un web browser en tu compu
