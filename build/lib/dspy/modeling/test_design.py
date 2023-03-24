@@ -12,3 +12,9 @@ def separate_train_and_test(df, porc_corte=0.8):
     corte = int(porc_corte * len(df))
     df_train, df_test = df.loc[:corte].reset_index(drop=True), df.loc[corte:].reset_index(drop=True)
     return df_train, df_test
+
+def cross_validation():
+    pass
+
+def boostrap():
+    pass

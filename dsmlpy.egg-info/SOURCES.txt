@@ -9,6 +9,7 @@ dspy/__init__.py
 dspy/data_preparation/__init__.py
 dspy/data_preparation/clean_data.py
 dspy/data_preparation/format_data.py
+dspy/data_preparation/text_preparation.py
 dspy/data_understanding/__init__.py
 dspy/data_understanding/describe_data.py
 dspy/data_understanding/collect_data/__init__.py
@@ -16,5 +17,8 @@ dspy/data_understanding/collect_data/web_scraping/__init__.py
 dspy/data_understanding/collect_data/web_scraping/scrapy.py
 dspy/data_understanding/collect_data/web_scraping/selenium.py
 dspy/modeling/__init__.py
-dspy/modeling/naive_bayes.py
 dspy/modeling/test_design.py
+dspy/modeling/supervised_learning/__init__.py
+dspy/modeling/supervised_learning/naive_bayes.py
+dspy/modeling/unsupervised_learning/__init__.py
+dspy/modeling/unsupervised_learning/clustering.py

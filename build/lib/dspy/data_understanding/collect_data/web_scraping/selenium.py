@@ -206,4 +206,3 @@ def scroll_down(driver):
         if new_height == last_height:
             break
         last_height = new_height
-

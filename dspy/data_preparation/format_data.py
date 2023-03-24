@@ -55,11 +55,12 @@ def format_column_date(df):
     for i in range(len(df)):
 
         # PASO 1: SPLIT FECHA (STRING) EN ELEMENTOS (DIA, MES, AÑO, HORA Y MIN)
-        n_dia, n_mes, n_año, hora, min = re.split(r':|.', df.loc[i, 'fecha'])
+        fecha_string = df.loc[i, 'fecha']
+        n_dia, n_mes, n_año = fecha_string.split("/")  # n_dia, n_mes, n_año = re.split(r':|/|.', fecha_string)
 
         # Paso 2: convierto string a datetime
-        fecha_datetime = datetime.datetime(int(n_año), int(n_mes), int(n_dia), int(hora), int(min))  # Convierto variable de clase 'str' a clase 'datetime.datetime'
-        fecha_form = fecha_datetime.strftime("%Y/%m/%d %H:%M")  # Convierto el formato de datetime del default al formato deseado
+        fecha_datetime = datetime.datetime(int(n_año), int(n_mes), int(n_dia))  # Convierto variable de clase 'str' a clase 'datetime.datetime'
+        fecha_form = fecha_datetime.strftime("%Y/%m/%d")  # Convierto el formato de datetime del default al formato deseado
 
         # Guardo fecha formateada
         df.loc[i, 'Fecha'] = fecha_form
