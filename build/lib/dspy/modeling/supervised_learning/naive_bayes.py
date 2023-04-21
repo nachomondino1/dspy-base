@@ -1,7 +1,7 @@
 # Importo librerias
 import pandas as pd
 
-def train_naive_bayes(df):
+def train_naive_bayes(df):  # PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
     """
     Entrena un modelo de Naive Bayes determinando las probibilades correspondientes.
     :param df: Dataframe train. Columnas: cualquier numero de variables dependientes y, necesiaramente al final, la
@@ -30,7 +30,6 @@ def train_naive_bayes(df):
 
             # Defino nombre de columna
             col_name = '{}={}'.format(atributo, str(valor))
-            l_prob = []
 
             # Por clase (valor de la variable respuesta)
             for clase in l_clases:
@@ -38,13 +37,11 @@ def train_naive_bayes(df):
                 # Calculo P(valor atrib / clase)
                 numerador = len(df[(df[atributo] == valor) & (df.iloc[:, -1] == clase)]) + 1  # el +1 es por la correccion de Laplace
                 denominador = len(df[df.iloc[:, -1] == clase]) + k  # el +k es por la correccion de Laplace
-                l_prob.append(numerador / denominador)
-
-            df_prob[col_name] = l_prob
+                df_prob[clase, col_name] = numerador / denominador
 
     return df_prob
 
-def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # que el usuario me pasa el df_train y el df_test y yo haga el resto?
+def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
     """
     Predice la clase de cada nuevo registro usando el modelo entrenado de Naive Bayes.
     :param df_prob: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma.
