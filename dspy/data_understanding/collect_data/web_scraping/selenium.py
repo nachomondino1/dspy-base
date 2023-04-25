@@ -3,13 +3,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 from webdriver_manager.chrome import ChromeDriverManager
 import random
 from time import sleep
+from googletrans import Translator
 
-class Crawler():
+
+class Crawler:
     """ It contains all the actions that the bot can perform from accepting cookies to clicking on the next one. """
 
     def __init__(self, headless, path):
@@ -18,7 +19,7 @@ class Crawler():
 
     def inicialize_chrome_driver(self, headless=True, path=None):
         """
-        Inicializa un chrome driver automatico
+        Inicializa un chrome driver automático
         :param headless: Boolean. True para evitar que se abra web browser, en caso contrario, False.
         :return: Chrome driver automatico
         """
@@ -46,40 +47,14 @@ class Crawler():
             driver = webdriver.Chrome(executable_path=path, options=options)
         return driver
 
-    def extract_tags(self, xpath, tag=None):
-        """
-        Encuentra todos los tags segun el xpath
-        :return: Lista de tags
-        """
-        tag_inic = self.driver if tag is None else tag  # Tag desde el que buscar el xpath
-        # Intento extraer el campo
-        try:
-            return tag_inic.find_elements(By.XPATH, xpath)
-        except NoSuchElementException:
-            print("Fallo la extraccion de los tags")
-
-    def extract_text_from_tag(self, xpath, tag=None):  # Le falta 1) la posibilidad de no extraer texto, 2) la posibilidad de haya mas de un xpath posible, 3) el webdriverwait...
-        """
-        Extrae texto de un tag
-        :param tag: Selenium Web Element del cual extraer datos. None = extraer de tutto el xpath de la pagina.
-        :return: String. En caso que falle la extraccion, None
-        """
-        tag_inic = self.driver if tag is None else tag  # Tag desde el que buscar el xpath
-        # Intento extraer el campo
-        try:
-            return tag_inic.find_element(By.XPATH, xpath).text
-        except NoSuchElementException:
-            print("Fallo la extraccion del campo")
-            return None
-
-    def click_boton(self, xpath, tag=None):
+    def click_boton(self, xpath, tag_inicial=None):
         """
         Hace click en boton. Se puede utilizar, por ejemplo, para aceptar cookies.
         :param xpath: XPATH del boton
-        :param tag: Selenium WebElement desde el cual buscar el xpath
+        :param tag_inicial: Selenium WebElement desde el cual buscar el xpath
         """
-        # Definicion de variables
-        tag_inic = self.driver if tag is None else tag
+        tag_inic = self.driver if tag_inicial is None else tag_inicial
+
         try:
             boton = WebDriverWait(tag_inic, 10).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             boton.click()
@@ -93,8 +68,45 @@ class Crawler():
             except:
                 print("Fallo click en boton")
 
+    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=None):  # Le falta 1) la posibilidad de haya mas de un xpath posible
+        """
+        Extrae texto de un tag
+        :param xpath: XPATH del tag del cual extraer datos
+        :param tag_inicial: Selenium Web Element desde el cual se busca el xpath
+        :param attribute: String con el nombre del atributo a extraer del tag
+        :param text: True para extraer texto del tag
+        :return: String. En caso que falle la extraccion, None
+        """
+        tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
-    # Forma 2: Boton aceptar cookies OCULT0 en tag #shadow-root
+        try:
+            tag_res = WebDriverWait(tag_inic, 10).until(EC.presence_of_element_located((By.XPATH, xpath)))
+
+            if text is True:
+                return tag_res.text
+
+            elif attribute is not None:
+                return tag_res.get_attribute(attribute)
+
+        except NoSuchElementException:
+            print("Fallo la extraccion del campo")
+            return None
+
+    def extract_tags(self, xpath, tag_inicial=None):
+        """
+        Encuentra todos los tags segun el xpath
+        :param xpath: XPATH de los tags
+        :return: Lista de tags
+        """
+        tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
+
+        try:
+            return tag_inic.find_elements(By.XPATH, xpath)
+
+        except NoSuchElementException:
+            print("Fallo la extraccion de los tags")
+
+    # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
     def accept_cookies_in_shadow_tag(self, xpath_shadow_parent, xpath_boton):
         """
         Click en aceptar cookies
@@ -107,9 +119,9 @@ class Crawler():
         shadow_root = self.driver.execute_script('return arguments[0].shadowRoot', shadow_parent)
 
         # Ubico el botón "Aceptar cookies" y lo clikeo
-        self.click_boton(tag=shadow_root, xpath=xpath_boton)
+        self.click_boton(tag_inicial=shadow_root, xpath=xpath_boton)
 
-    # Forma 3: Boton aceptar cookies OCULT0 en tag #document
+    # Forma 2: Boton aceptar cookies OCULT0 en tag #document
     def accept_cookies_in_document_tag(self, xpath_document_parent, xpath_boton):
         """
         Click en aceptar cookies
@@ -123,8 +135,7 @@ class Crawler():
         # Ubico el botón "Aceptar cookies" y lo clikeo
         self.click_boton(xpath=xpath_boton)
 
-    # LOGIN WEBSITE
-    def login_website(self, user, password, xpath_user, xpath_pass, xpath_boton_login, with_user_validation=False, xpath_boton_validate_user=None):
+    def login_website(self, user, password, xpath_user, xpath_pass, xpath_boton_login, xpath_boton_validate_user=None):
         """
         Login website
         """
@@ -133,50 +144,17 @@ class Crawler():
         user_input.send_keys(user)
 
         # Si hay que validar el usuario
-        if with_user_validation:
+        if xpath_boton_validate_user is not None:
 
             # Localizo el boton que valida el usuario y lo clickeo
-            boton_siguiente = self.driver.find_element(By.XPATH, xpath_boton_validate_user)
-            boton_siguiente.click()
+            self.click_boton(xpath=xpath_boton_validate_user)
 
         # Busco tag input para la pass y escribo la pass
         pass_input = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath_pass)))
         pass_input.send_keys(password)
 
         # Localizo el boton "Iniciar sesion" y lo clickeo
-        boton_iniciar_sesion = self.driver.find_element(By.XPATH, xpath_boton_login)
-        boton_iniciar_sesion.click()
-
-
-
-    # PAGINATION
-    # Tipo 1:
-    def get_pagination_url(self, xpath_url):  # deberia llamarse get_url_from_tag
-        """
-        Obtiene url de siguiente pagina si la pagina tiene link asociado
-        """
-        try:
-            url = self.driver.find_element(By.XPATH, xpath_url).get_attribute('href')
-            return url
-        except:
-            print("No pudo hacer el click en la siguiente pagina")
-            return None
-
-    # Tipo 3:
-    def get_pagination_drop_down_list_button(self):
-        """
-        Obtiene url de siguiente pagina si la pagina no tiene link asociado y es solo un boton
-        """
-        # Click en flechita para desplegar dias (paginas de paginacion)
-        self.driver.find_element(By.XPATH, '<XPATH_desplegar_flechita>').click()  # boton_desplegar
-
-        try:
-            # Obtengo tag de siguiente dia
-            boton_siguiente_pagina = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH,'<XPATH_boton>')))
-            return boton_siguiente_pagina
-        except:
-            print("No hay mas paginas")
-            return None
+        self.click_boton(xpath=xpath_boton_login)
 
     def scroll_down(self):
         """
@@ -203,3 +181,26 @@ class Crawler():
             if new_height == last_height:
                 break
             last_height = new_height
+
+    def translate_text(self, text, source, destin):
+        """
+        Traduce el texto pasado como parametro del lenguaje de entrada al de salida.
+        :param text: String. Texto a traducir
+        :param source: String. Lenguaje de entrada.
+        :param destin: String. Lenguaje de salida.
+        :return: String. Texto traducido
+        """
+        # Definicion de variables
+        translator = Translator()
+        CANT_FALLAS_MAX = 10
+
+        # Hago x intentos de traduccion (a veces falla a la primera y lo hace bien despues)
+        for i in range(CANT_FALLAS_MAX):
+
+            # Intento traducir
+            try:
+                return translator.translate(text, src=source, dest=destin).text
+            except:
+                print(f"Falló traducción Nº{i + 1}")
+                sleep(random.uniform(0.5, 1.5))
+        return text
