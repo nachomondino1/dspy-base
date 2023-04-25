@@ -14,7 +14,7 @@ DESCRIPTION = 'Librería para desarrollar proyectos de Ciencia de datos (data sc
 LONG_DESCRIPTION = (HERE / "README.md").read_text(encoding='utf-8')  # Referencia al documento README con una descripción más elaborada
 LONG_DESC_TYPE = "text/markdown"
 INSTALL_REQUIRES = [
-      'pandas', 'selenium'
+      'pandas', 'selenium', 'googletrans', 'pandas-profiling'
       ]  #Paquetes necesarios para que funcione la libreía. Se instalarán a la vez si no lo tuvieras ya instalado
 
 
