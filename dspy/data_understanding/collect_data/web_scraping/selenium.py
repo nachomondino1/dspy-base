@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 import random
 from time import sleep
@@ -59,7 +59,7 @@ class Crawler:
             boton = WebDriverWait(tag_inic, 10).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             boton.click()
 
-        except NoSuchElementException:
+        except NoSuchElementException or TimeoutException:
             print("No se pudo encontrar el elemento utilizando el XPath proporcionado.")
 
         except ElementClickInterceptedException:
@@ -88,7 +88,7 @@ class Crawler:
             elif attribute is not None:
                 return tag_res.get_attribute(attribute)
 
-        except NoSuchElementException:
+        except NoSuchElementException or TimeoutException:
             print("Fallo la extraccion del campo")
             return None
 
@@ -103,7 +103,7 @@ class Crawler:
         try:
             return tag_inic.find_elements(By.XPATH, xpath)
 
-        except NoSuchElementException:
+        except NoSuchElementException or TimeoutException:
             print("Fallo la extraccion de los tags")
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
