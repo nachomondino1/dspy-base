@@ -88,7 +88,7 @@ class Crawler:
             elif attribute is not None:
                 return tag_res.get_attribute(attribute)
 
-        except NoSuchElementException or TimeoutException:
+        except TimeoutException:  # NoSuchElementException se usa cuando no hay WebDriverWait
             print("Fallo la extraccion del campo")
             return None
 
@@ -101,9 +101,9 @@ class Crawler:
         tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
         try:
-            return tag_inic.find_elements(By.XPATH, xpath)
+            return WebDriverWait(tag_inic, 10).until(EC.presence_of_all_elements_located((By.XPATH, xpath)))
 
-        except NoSuchElementException or TimeoutException:
+        except TimeoutException:
             print("Fallo la extraccion de los tags")
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
