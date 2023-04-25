@@ -59,7 +59,7 @@ class Crawler:
             boton = WebDriverWait(tag_inic, 10).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             boton.click()
 
-        except NoSuchElementException or TimeoutException:
+        except TimeoutException:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
             print("No se pudo encontrar el elemento utilizando el XPath proporcionado.")
 
         except ElementClickInterceptedException:
@@ -68,7 +68,7 @@ class Crawler:
             except:
                 print("Fallo click en boton")
 
-    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=None):  # Le falta 1) la posibilidad de haya mas de un xpath posible
+    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=None, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
         """
         Extrae texto de un tag
         :param xpath: XPATH del tag del cual extraer datos
@@ -80,7 +80,7 @@ class Crawler:
         tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
         try:
-            tag_res = WebDriverWait(tag_inic, 10).until(EC.presence_of_element_located((By.XPATH, xpath)))
+            tag_res = WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_element_located((By.XPATH, xpath)))
 
             if text is True:
                 return tag_res.text
@@ -88,11 +88,11 @@ class Crawler:
             elif attribute is not None:
                 return tag_res.get_attribute(attribute)
 
-        except TimeoutException:  # NoSuchElementException se usa cuando no hay WebDriverWait
+        except NoSuchElementException or TimeoutException:  # NoSuchElementException se usa cuando no hay WebDriverWait
             print("Fallo la extraccion del campo")
             return None
 
-    def extract_tags(self, xpath, tag_inicial=None):
+    def extract_tags(self, xpath, tag_inicial=None, sec_wait=5):
         """
         Encuentra todos los tags segun el xpath
         :param xpath: XPATH de los tags
@@ -101,9 +101,9 @@ class Crawler:
         tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
         try:
-            return WebDriverWait(tag_inic, 10).until(EC.presence_of_all_elements_located((By.XPATH, xpath)))
+            return WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_all_elements_located((By.XPATH, xpath)))
 
-        except TimeoutException:
+        except NoSuchElementException or TimeoutException:
             print("Fallo la extraccion de los tags")
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
