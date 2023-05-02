@@ -1,46 +1,28 @@
 import pandas as pd
 
-def balance_dataset(df):  # esta adaptada a un ejemplo en particular, falta generalizar.
+def balance_dataset(df, var_resp):
 
     # Definicion de variables
-    df_aux = pd.DataFrame(columns=df.columns)
-    n_ejs_clase_min = 1000000000
-    l_clases = list(df['equipo_ganador'].unique())
+    df_bal = pd.DataFrame(columns=df.columns)
+    l_clases = list(df[var_resp].unique())
 
     # Random shuffle dataframe (por evitar mal balanceo en caso de que el df este ordenado por algun campo)
     df = df.sample(frac=1).reset_index(drop=True)
 
     # Paso 1: Identifico cuantos ejemplos deberia tener cada clase para que el dataset este balanceado
-    # Por clase
-    for clase in l_clases:
-
-        # Obtengo cantidad de registros con dicha clase
-        n_ejs_clase = len(df[df['equipo_ganador'] == clase])
-        print("Clase: {}. Nºejemplos: {}".format(clase, n_ejs_clase))
-
-        # Si tiene menos ejemplos que las otras clases
-        if n_ejs_clase < n_ejs_clase_min:
-
-            # Guardo Nº ejemplos min
-            n_ejs_clase_min = n_ejs_clase
-
-    print("n_ejs_clase_min", n_ejs_clase_min)
+    n_ejs_clase_min = min([len(df[df[var_resp] == clase]) for clase in l_clases])
+    print(f"Numero de ejemplos a dejar por clase: {n_ejs_clase_min}")
 
     # Paso 2: Efectuo el balanceo segun la cantidad que debe tener cada clase (n_ejs_clase_min)
     for clase in l_clases:
 
-        print("Clase: ", clase)
-        df_clase = df[df['equipo_ganador'] == clase]
-        df_clase_bal = df_clase[:n_ejs_clase_min]
-        print(df_clase_bal)
-        print("Balanceo:", len(df_clase_bal))
-        df_aux = pd.concat([df_aux, df_clase_bal])
-        print(len(df_aux[df_aux['equipo_ganador'] == clase]))
+        # Obtengo registros de la clase segun n_ejs_clase_min
+        df_clase_bal = df[df[var_resp] == clase][:n_ejs_clase_min]
 
-    # Random shuffle dataframe (pues esta ordenado segun la variable respuesta)
-    df_shuf = df_aux.sample(frac=1).reset_index(drop=True)
-    print(df_aux.shape)
-    return df_shuf
+        # Construyo nuevo dataset balanceado
+        df_bal = pd.concat([df_bal, df_clase_bal])
+        print(f"Clase: {clase}. Cantidad de valores inicial: {len(df[df[var_resp] == clase])}. Cantidad de valores final: {len(df_clase_bal)}")
+    return df_bal
 
 def categorize_numeric_columns(df):
     """
@@ -160,3 +142,9 @@ def values_distribution_in_classes(dict, valores_unicos):
 
     print("Distribucion de valores unicos en clases: ", list(d.values()))
     return list(d.values())
+
+def main():
+    df = pd.read_excel('/Users/nachomondino/Desktop/df_prepared.xlsx')
+    df_bal = balance_dataset(df, var_resp='equipo_ganador')
+
+main()
