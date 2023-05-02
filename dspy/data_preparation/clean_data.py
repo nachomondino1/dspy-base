@@ -142,9 +142,3 @@ def values_distribution_in_classes(dict, valores_unicos):
 
     print("Distribucion de valores unicos en clases: ", list(d.values()))
     return list(d.values())
-
-def main():
-    df = pd.read_excel('/Users/nachomondino/Desktop/df_prepared.xlsx')
-    df_bal = balance_dataset(df, var_resp='equipo_ganador')
-
-main()
