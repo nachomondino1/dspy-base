@@ -46,7 +46,7 @@ def train_naive_bayes(df, var_resp):
     df_prob = pd.DataFrame(d, index=l_clases)  # Convierto diccionario en Dataframe (asi evito error de Highly fragmented)
     return df_prob
 
-def predict_naive_bayes_2(df_prob, df_test, var_resp, col_prob_clase=False):
+def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
     """
     Predice la clase de cada nuevo registro usando el modelo entrenado de Naive Bayes.
     :param df_prob: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma.
