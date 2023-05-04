@@ -12,33 +12,37 @@ def train_naive_bayes(df):  # PerformanceWarning: DataFrame is highly fragmented
     """
     # Definicion de variables
     var_resp = df.columns[-1]  # Nombre de la variable respuesta
-    l_clases = df.iloc[:, -1].unique()  # Valores de la variable respuesta (debe ser categorica)
+    l_clases = df[var_resp].unique()  # Valores de la variable respuesta (debe ser categorica)
     k = len(l_clases)  # Cantidad de valores de la variable respuesta (utilizado en correccion de Laplace)
     df_prob = pd.DataFrame(index=l_clases)  # Dataframe de probabilidades
 
     # Paso 1: Obtener estimacion de P(vj) (en este caso, P(escoces) y P(ingles)
     for clase in l_clases:
 
-        df_prob.loc[clase, var_resp] = len(df[df.iloc[:, -1] == clase]) / len(df)
+        df_prob.loc[clase, var_resp] = len(df[df[var_resp] == clase]) / len(df)
 
     # Paso 2: Por cada valor de cada atributo (e.g. atrib scones toma valor 0 o 1), calcular P(ai/vj)
     # Por atributo (sin incluir la variable respuesta)
     for atributo in list(df.columns)[:-1]:
 
         # Por valor del atributo
-        for valor in df[atributo].unique():
+        for valor_atr in df[atributo].unique():
 
             # Defino nombre de columna
-            col_name = '{}={}'.format(atributo, str(valor))
+            col_name = f'{atributo}={valor_atr}'
+            l = []
 
             # Por clase (valor de la variable respuesta)
             for clase in l_clases:
 
                 # Calculo P(valor atrib / clase)
-                numerador = len(df[(df[atributo] == valor) & (df.iloc[:, -1] == clase)]) + 1  # el +1 es por la correccion de Laplace
-                denominador = len(df[df.iloc[:, -1] == clase]) + k  # el +k es por la correccion de Laplace
-                df_prob[clase, col_name] = numerador / denominador
+                numerador = len(df[(df[atributo] == valor_atr) & (df[var_resp] == clase)]) + 1  # el +1 es por la correccion de Laplace
+                denominador = len(df[df[var_resp] == clase]) + k  # el +k es por la correccion de Laplace
+                l.append(numerador/denominador)
+                # df_prob[clase, col_name] = numerador / denominador
 
+            # Agrego la columna
+            df_prob = pd.concat([df, pd.Series(l)], axis=1)
     return df_prob
 
 def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`

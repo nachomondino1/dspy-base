@@ -1,7 +1,7 @@
 # Importo librerias
 import pandas as pd
 
-def train_naive_bayes(df):  # PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+def train_naive_bayes(df, var_resp):
     """
     Entrena un modelo de Naive Bayes determinando las probibilades correspondientes.
     :param df: Dataframe train. Columnas: cualquier numero de variables dependientes y, necesiaramente al final, la
@@ -11,37 +11,42 @@ def train_naive_bayes(df):  # PerformanceWarning: DataFrame is highly fragmented
     la variable respuesta es tal valor.
     """
     # Definicion de variables
-    var_resp = df.columns[-1]  # Nombre de la variable respuesta
-    l_clases = df.iloc[:, -1].unique()  # Valores de la variable respuesta (debe ser categorica)
+    d = {}  # Diccionario donde cargare las columnas para el dataset df_prob
+    l_atrib = list(df.drop(var_resp, axis=1).columns)
+    l_clases = df[var_resp].unique()  # Valores de la variable respuesta (debe ser categorica)
     k = len(l_clases)  # Cantidad de valores de la variable respuesta (utilizado en correccion de Laplace)
-    df_prob = pd.DataFrame(index=l_clases)  # Dataframe de probabilidades
 
     # Paso 1: Obtener estimacion de P(vj) (en este caso, P(escoces) y P(ingles)
-    for clase in l_clases:
-
-        df_prob.loc[clase, var_resp] = len(df[df.iloc[:, -1] == clase]) / len(df)
+    d[var_resp] = [len(df[df[var_resp] == clase]) / len(df) for clase in l_clases]
 
     # Paso 2: Por cada valor de cada atributo (e.g. atrib scones toma valor 0 o 1), calcular P(ai/vj)
     # Por atributo (sin incluir la variable respuesta)
-    for atributo in list(df.columns)[:-1]:
+    for atributo in l_atrib:
+        print(f'Atributo: {atributo}')
 
         # Por valor del atributo
-        for valor in df[atributo].unique():
+        for valor_atr in df[atributo].unique():
 
-            # Defino nombre de columna
-            col_name = '{}={}'.format(atributo, str(valor))
+            print(f'\t Valor del atributo: {valor_atr}', end='. ')
+            l = []
 
             # Por clase (valor de la variable respuesta)
             for clase in l_clases:
 
                 # Calculo P(valor atrib / clase)
-                numerador = len(df[(df[atributo] == valor) & (df.iloc[:, -1] == clase)]) + 1  # el +1 es por la correccion de Laplace
-                denominador = len(df[df.iloc[:, -1] == clase]) + k  # el +k es por la correccion de Laplace
-                df_prob[clase, col_name] = numerador / denominador
+                numerador = len(df[(df[atributo] == valor_atr) & (df[var_resp] == clase)]) + 1  # el +1 es por la correccion de Laplace
+                denominador = len(df[df[var_resp] == clase]) + k  # el +k es por la correccion de Laplace
+                l.append(numerador/denominador)
+                print(f'\t Probabilidad para la clase {clase}: {numerador/denominador}')
 
+            # Agrego la columna
+            d[f'{atributo}={valor_atr}'] = l
+
+    # Concateno columnas del
+    df_prob = pd.DataFrame(d, index=l_clases)  # Convierto diccionario en Dataframe (asi evito error de Highly fragmented)
     return df_prob
 
-def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+def predict_naive_bayes_2(df_prob, df_test, var_resp, col_prob_clase=False):
     """
     Predice la clase de cada nuevo registro usando el modelo entrenado de Naive Bayes.
     :param df_prob: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma.
@@ -52,7 +57,8 @@ def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # PerformanceW
     :return: Dataframe test mas una columna con la clase predicha por el modelo
     """
     # Definicion de variables
-    l_atrib, var_resp = df_test.columns[:-1], df_test.columns[-1]
+    l_atrib = list(df_test.columns)
+    l_atrib.remove(var_resp)
     l_clases = list(df_prob.index)  # Valores que puede tomar la variable respuesta
 
     # Por registro a predecir
@@ -71,19 +77,23 @@ def predict_naive_bayes(df_prob, df_test, col_prob_clase=False):  # PerformanceW
             # Por atributo
             for atrib in l_atrib:
 
-                col_name = '{}={}'.format(atrib, df_test.loc[i, atrib])
-                prob *= df_prob.loc[clase, col_name]
-                # print("P({}/{}) = {}}".format(atrib+str(valor), clase, df_prob[col_name]))
+                valor_atr = df_test.loc[i, atrib]
+                col_name = '{}={}'.format(atrib, valor_atr)
+                try:
+                    prob *= df_prob.loc[clase, col_name]
+                    print(f"P({col_name}/{clase}) = {df_prob.loc[clase, col_name]}")
+                except KeyError:
+                    print(f"Fallo la extraccion de la probabilidad {col_name}")
 
             # Guardo probabilidad de que pertenezca a la clase
-            # print("Prob que sea clase {}: {}".format(clase, prob))
+            print(f"Prob que sea clase {clase}: {prob}")
             if prob > prob_max:
                 prob_max = prob
                 clase_max = clase
 
             # Calculo prob del denominador para poder calcular la prob de una clase dado ciertos atrib
             prob_den += prob
-            # print("Prob denominador: ", prob_den)
+            print("Prob denominador: ", prob_den)
 
         # Guardo resultados
         prob_clase = prob_max / prob_den * 100
