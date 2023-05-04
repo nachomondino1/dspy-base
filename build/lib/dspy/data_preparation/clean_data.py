@@ -88,7 +88,7 @@ def create_classes(valores, cant_clases):
     # DEFINO VARIABLES
     valores_unicos = sorted(valores.dropna().unique())
     print("Valores unicos: ", valores_unicos)
-    cant_clases_perc = int(round(0.1 * cant_clases, 0))  # cantidad de clases utilizando percentiles
+    cant_clases_perc = int(round(0.5 * cant_clases, 0))  # cantidad de clases utilizando percentiles
     percentiles = 1 / cant_clases_perc  # percentil
     d = {}  # diccionario a retornar (con valores maximos y medios de cada clase)
 
