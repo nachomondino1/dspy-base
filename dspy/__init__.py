@@ -2,5 +2,5 @@
 from .data_understanding import *
 from .data_preparation import *
 from .modeling import *
-from .evaluation import *
-from .deployment import *
+# from .evaluation import *
+# from .deployment import *

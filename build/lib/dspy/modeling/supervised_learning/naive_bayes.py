@@ -4,8 +4,8 @@ import pandas as pd
 def train_naive_bayes(df, var_resp):
     """
     Entrena un modelo de Naive Bayes determinando las probibilades correspondientes.
-    :param df: Dataframe train. Columnas: cualquier numero de variables dependientes y, necesiaramente al final, la
-    variable respuesta.
+    :param df: Dataframe train. Columnas: cualquier numero de variables dependientes y con la variable respuesta
+    :param var_resp: String. Nombre de la variable respuesta
     :return: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma. Index:
     valores de la variable respuesta. Celdas: probabilidades de que tal variable dependiente valga tal valor dado que
     la variable respuesta es tal valor.
@@ -54,6 +54,7 @@ def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
     que la variable respuesta es tal valor.
     :param df_test: Dataframe test. Columnas: cualquier numero de variables dependientes y, necesiaramente al final, la
     variable respuesta.
+    :param var_resp: String. Nombre de la variable respuesta
     :return: Dataframe test mas una columna con la clase predicha por el modelo
     """
     # Definicion de variables

@@ -46,7 +46,7 @@ def train_naive_bayes(df, var_resp):
     df_prob = pd.DataFrame(d, index=l_clases)  # Convierto diccionario en Dataframe (asi evito error de Highly fragmented)
     return df_prob
 
-def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
+def predict_naive_bayes(df_prob, df_test, var_resp, con_prob=False):
     """
     Predice la clase de cada nuevo registro usando el modelo entrenado de Naive Bayes.
     :param df_prob: Dataframe. Columnas: la variable respuesta y cada variable dependiente por cada valor que toma.
@@ -57,20 +57,18 @@ def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
     :param var_resp: String. Nombre de la variable respuesta
     :return: Dataframe test mas una columna con la clase predicha por el modelo
     """
-    # Definicion de variables
-    l_atrib = list(df_test.columns)
-    l_atrib.remove(var_resp)
-    l_clases = list(df_prob.index)  # Valores que puede tomar la variable respuesta
+    l_atrib = list(df_test.drop(var_resp, axis=1).columns)
 
     # Por registro a predecir
     for i in range(len(df_test)):
 
-        # Reinicio variables
-        prob_max, prob_den = 0, 0
+        # Defino variables
+        d = {}  # Reinicio diccionario por cada nuevo registro
+        prob_den = 0  # Reinicio prob_den por cada nuevo registro
 
         # Paso 3: Multiplicar P(ai/vj) y P(vj)
         # Por clase (valor de la variable respuesta)
-        for clase in l_clases:
+        for clase in list(df_prob.index):
 
             # Definicion de variables
             prob = df_prob.loc[clase, var_resp]  # Inicializo variable. Probabilidad de que sea de una clase dados ciertos atributos
@@ -79,7 +77,7 @@ def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
             for atrib in l_atrib:
 
                 valor_atr = df_test.loc[i, atrib]
-                col_name = '{}={}'.format(atrib, valor_atr)
+                col_name = f'{atrib}={valor_atr}'
                 try:
                     prob *= df_prob.loc[clase, col_name]
                     print(f"P({col_name}/{clase}) = {df_prob.loc[clase, col_name]}")
@@ -87,23 +85,24 @@ def predict_naive_bayes(df_prob, df_test, var_resp, col_prob_clase=False):
                     print(f"Fallo la extraccion de la probabilidad {col_name}")
 
             # Guardo probabilidad de que pertenezca a la clase
+            d[clase] = prob
             print(f"Prob que sea clase {clase}: {prob}")
-            if prob > prob_max:
-                prob_max = prob
-                clase_max = clase
 
             # Calculo prob del denominador para poder calcular la prob de una clase dado ciertos atrib
             prob_den += prob
             print("Prob denominador: ", prob_den)
 
         # Guardo resultados
-        prob_clase = prob_max / prob_den * 100
-        df_test.loc[i, 'y_pred'] = clase_max
-        # print("Dados los atributos, se infiere que es {} con una prob de {:.0f}%".format(clase_max, prob_clase))
+        prob_max = max(d.values())
+        for clase, prob in d.items():
 
-        # Si el usuario quiere la probabilidad de la clase predicha
-        if col_prob_clase:
-            # Guardo probabilidad de la clase predicha
-            df_test.loc[i, 'y_pred_prob'] = prob_clase
+            # Si la clase tiene la mayor probabilidad
+            if prob == prob_max:
+                # Guardo la clase predicha
+                df_test.loc[i, 'y_pred'] = clase
+                print("Dados los atributos, se infiere que es {} con una prob de {:.0f}%".format(clase, prob))
 
+            if con_prob:
+                # Guardo probabilidad de la clase (de todas las clases)
+                df_test.loc[i, f'prob_{clase}'] = prob / prob_den * 100
     return df_test
