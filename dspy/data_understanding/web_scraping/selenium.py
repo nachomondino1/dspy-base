@@ -68,7 +68,7 @@ class Crawler:
             except:
                 print("Fallo click en boton")
 
-    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=None, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
+    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
         """
         Extrae texto de un tag
         :param xpath: XPATH del tag del cual extraer datos
@@ -81,22 +81,17 @@ class Crawler:
 
         try:
             tag_res = WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_element_located((By.XPATH, xpath)))
-
-            if text is True:
-                return tag_res.text
-
-            elif attribute is not None:
-                return tag_res.get_attribute(attribute)
+            return tag_res.text if text is True else tag_res.get_attribute(attribute) if attribute is not None else tag_res
 
         except TimeoutException:  # NoSuchElementException se usa cuando no hay WebDriverWait
-            print("Fallo la extraccion del campo")
+            print(f"Fallo la extraccion del campo. Probablemente no exista el xpath {xpath}")
             return None
 
     def extract_tags(self, xpath, tag_inicial=None, sec_wait=5):
         """
         Encuentra todos los tags segun el xpath
         :param xpath: XPATH de los tags
-        :return: Lista de tags
+        :return: Lista de tags, en caso contrario, None
         """
         tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
@@ -104,7 +99,8 @@ class Crawler:
             return WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_all_elements_located((By.XPATH, xpath)))
 
         except TimeoutException:
-            print("Fallo la extraccion de los tags")
+            print(f"Fallo la extraccion de tags. Probablemente no exista el xpath {xpath}")
+            return None
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
     def accept_cookies_in_shadow_tag(self, xpath_shadow_parent, xpath_boton):
