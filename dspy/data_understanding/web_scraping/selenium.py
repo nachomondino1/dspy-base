@@ -64,7 +64,7 @@ class Crawler:
                 boton.click()
 
             # Si falla el click convencional
-            except StaleElementReferenceException:  # ElementClickInterceptedException:
+            except (StaleElementReferenceException, ElementClickInterceptedException) as e:
 
                 # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
                 try:
