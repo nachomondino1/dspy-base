@@ -70,10 +70,10 @@ class Crawler:
                 try:
                     self.driver.execute_script("arguments[0].click()", boton)  # Intento con execute_script por si es con JS
                 except:
-                    return print(f"Fallo el click en el boton {xpath}")
+                    return f"Fallo el click en el boton {xpath}"
 
         except TimeoutException:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
-            return print(f"No se encontro el boton en {xpath}")
+            return f"No se encontro el boton en {xpath}"
 
 
     def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
