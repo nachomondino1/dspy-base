@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, StaleElementReferenceException
 from webdriver_manager.chrome import ChromeDriverManager
 import random
 from time import sleep
@@ -64,7 +64,7 @@ class Crawler:
                 boton.click()
 
             # Si falla el click convencional
-            except ElementClickInterceptedException:
+            except StaleElementReferenceException:  # ElementClickInterceptedException:
 
                 # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
                 try:
