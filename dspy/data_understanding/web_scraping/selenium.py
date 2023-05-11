@@ -56,17 +56,25 @@ class Crawler:
         tag_inic = self.driver if tag_inicial is None else tag_inicial
 
         try:
+            # Busco tag del boton segun el XPATH
             boton = WebDriverWait(tag_inic, 10).until(EC.element_to_be_clickable((By.XPATH, xpath)))
-            boton.click()
+
+            # Intento hacer click en boton
+            try:
+                boton.click()
+
+            # Si falla el click convencional
+            except ElementClickInterceptedException:
+
+                # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
+                try:
+                    self.driver.execute_script("arguments[0].click()", boton)  # Intento con execute_script por si es con JS
+                except:
+                    print(f"Fallo el click en el boton {xpath}")
 
         except TimeoutException:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
-            print("No se pudo encontrar el elemento utilizando el XPath proporcionado.")
+            print(f"No se encontro el boton en {xpath}")
 
-        except ElementClickInterceptedException:
-            try:
-                self.driver.execute_script("arguments[0].click()", boton)  # Intento con execute_script por si es con JS
-            except:
-                print("Fallo click en boton")
 
     def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
         """
