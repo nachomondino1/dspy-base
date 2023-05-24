@@ -47,34 +47,45 @@ class Crawler:
             driver = webdriver.Chrome(executable_path=path, options=options)
         return driver
 
-    def click_boton(self, xpath, tag_inicial=None):
+    def click_boton(self, xpath, tag_inicial=None, sec_wait=5, repeat_click=False):
         """
         Hace click en boton. Se puede utilizar, por ejemplo, para aceptar cookies.
         :param xpath: XPATH del boton
         :param tag_inicial: Selenium WebElement desde el cual buscar el xpath
+        :return: None si logra hacer el click. En caso contrario, retorna False (no retorno None puesto que cuando hace click tambien retorna None)
         """
         tag_inic = self.driver if tag_inicial is None else tag_inicial
+        n_clicks = 0
 
-        try:
-            # Busco tag del boton segun el XPATH
-            boton = WebDriverWait(tag_inic, 10).until(EC.element_to_be_clickable((By.XPATH, xpath)))
-
-            # Intento hacer click en boton
+        # Hago tantos clicks como se requieran
+        while True:
             try:
-                boton.click()
+                # Busco tag del boton segun el XPATH
+                boton = WebDriverWait(tag_inic, sec_wait).until(EC.element_to_be_clickable((By.XPATH, xpath)))
 
-            # Si falla el click convencional
-            except (StaleElementReferenceException, ElementClickInterceptedException) as e:
-
-                # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
+                # Intento hacer click en boton
                 try:
-                    self.driver.execute_script("arguments[0].click()", boton)  # Intento con execute_script por si es con JS
-                except:
-                    return f"Fallo el click en el boton {xpath}"
+                    boton.click()
+                    n_clicks += 1
 
-        except TimeoutException:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
-            return f"No se encontro el boton en {xpath}"
+                # Si falla el click convencional
+                except (StaleElementReferenceException, ElementClickInterceptedException) as e:
 
+                    # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
+                    try:
+                        self.driver.execute_script("arguments[0].click()", boton)
+                        n_clicks += 1
+
+                    except:
+                        print(f"Tras {n_clicks} clicks, fallo el click en el boton '{xpath}'")
+                        return False
+
+            except TimeoutException as e:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
+                print(f"Tras {n_clicks} clicks, no se encontro el boton en '{xpath}'")
+                return False
+
+            if repeat_click is False:
+                break
 
     def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
         """
@@ -99,7 +110,8 @@ class Crawler:
         """
         Encuentra todos los tags segun el xpath
         :param xpath: XPATH de los tags
-        :return: Lista de tags, en caso contrario, None
+        :return: Lista de tags, en caso contrario, lista vacia
+
         """
         tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
 
@@ -108,7 +120,7 @@ class Crawler:
 
         except TimeoutException:
             print(f"Fallo la extraccion de tags. Probablemente no exista el xpath {xpath}")
-            return None
+            return []  # Si devuelvo None y el usuario itera sobre el return, dara el error: TypeError: 'NoneType' object is not iterable
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
     def accept_cookies_in_shadow_tag(self, xpath_shadow_parent, xpath_boton):
@@ -186,7 +198,7 @@ class Crawler:
                 break
             last_height = new_height
 
-    def translate_text(self, text, source, destin):
+    def translate_text(self, text, source, destin):  # Ojo que tenes limite al mes de traducciones segun cant de caracteres traducidos y se llega rapido
         """
         Traduce el texto pasado como parametro del lenguaje de entrada al de salida.
         :param text: String. Texto a traducir
