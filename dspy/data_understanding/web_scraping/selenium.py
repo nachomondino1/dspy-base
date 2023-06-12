@@ -19,10 +19,15 @@ class Crawler:
 
     def inicialize_chrome_driver(self, headless=True, path=None):
         """
-        Inicializa un chrome driver automático
-        :param headless: Boolean. True para evitar que se abra web browser, en caso contrario, False.
-        :return: Chrome driver automatico
-        """
+          Initialize a Chrome WebDriver.
+
+          Args:
+              headless (bool): True to prevent the web browser from opening, False otherwise.
+              path (str): Path to the Chrome WebDriver executable (.exe).
+
+          Returns:
+              WebDriver: Chrome WebDriver instance.
+          """
         # Defino opciones del webdriver
         options = webdriver.ChromeOptions()
         options.add_argument("start-maximized")
@@ -35,7 +40,6 @@ class Crawler:
         options.add_argument("--incognito")
         options.add_argument("--disable-popup-blocking")
 
-        # Si el usuario quiere que no se abra un web browser
         if headless:
             options.add_argument("--headless")  # Hace que no se abra un web browser en tu compu
 
@@ -47,45 +51,18 @@ class Crawler:
             driver = webdriver.Chrome(executable_path=path, options=options)
         return driver
 
-    def click_boton(self, xpath, tag_inicial=None, sec_wait=5, repeat_click=False):
-        """
-        Hace click en boton. Se puede utilizar, por ejemplo, para aceptar cookies.
-        :param xpath: XPATH del boton
-        :param tag_inicial: Selenium WebElement desde el cual buscar el xpath
-        :return: None si logra hacer el click. En caso contrario, retorna False (no retorno None puesto que cuando hace click tambien retorna None)
-        """
-        tag_inic = self.driver if tag_inicial is None else tag_inicial
-        n_clicks = 0
-
-        # Hago tantos clicks como se requieran
-        while True:
+    def click_boton(self, boton):
+        if boton is not None:
             try:
-                # Busco tag del boton segun el XPATH
-                boton = WebDriverWait(tag_inic, sec_wait).until(EC.element_to_be_clickable((By.XPATH, xpath)))
-
-                # Intento hacer click en boton
+                WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(boton))
+                boton.click()
+            except (StaleElementReferenceException, TimeoutException, ElementClickInterceptedException):
                 try:
-                    boton.click()
-                    n_clicks += 1
-
-                # Si falla el click convencional
-                except (StaleElementReferenceException, ElementClickInterceptedException) as e:
-
-                    # Intento hacer click en boton suponiendo que esta desarrollado en JavaScript
-                    try:
-                        self.driver.execute_script("arguments[0].click()", boton)
-                        n_clicks += 1
-
-                    except:
-                        print(f"Tras {n_clicks} clicks, fallo el click en el boton '{xpath}'")
-                        return False
-
-            except TimeoutException as e:  # Saque NoSuchElementException puesto que es cuando no hay WebDriverWait
-                print(f"Tras {n_clicks} clicks, no se encontro el boton en '{xpath}'")
-                return False
-
-            if repeat_click is False:
-                break
+                    self.driver.execute_script("arguments[0].click()", boton)
+                except:
+                    return False
+        else:
+            return False
 
     def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
         """
