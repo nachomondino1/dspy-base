@@ -1,28 +1,37 @@
 import pandas as pd
 
-def balance_dataset(df, var_resp):
+def balance_dataset(X, y):
 
-    # Definicion de variables
+    # Combinar X e y en un único DataFrame
+    df = pd.concat([X, y], axis=1)
+
+    # Definition de variables
     df_bal = pd.DataFrame(columns=df.columns)
-    l_clases = list(df[var_resp].unique())
+    l_clases = list(y.unique())
 
-    # Random shuffle dataframe (por evitar mal balanceo en caso de que el df este ordenado por algun campo)
-    df = df.sample(frac=1).reset_index(drop=True)
+    # Random shuffle dataframe (para evitar mal balanceo en caso de que el df esté ordenado por algún campo)
+    # df = df.sample(frac=1).reset_index(drop=True)
 
-    # Paso 1: Identifico cuantos ejemplos deberia tener cada clase para que el dataset este balanceado
-    n_ejs_clase_min = min([len(df[df[var_resp] == clase]) for clase in l_clases])
-    print(f"Numero de ejemplos a dejar por clase: {n_ejs_clase_min}")
+    # Paso 1: Identificar cuántos ejemplos debería tener cada clase para que el dataset esté balanceado
+    n_ejs_clase_min = min([len(df[df[y.name] == clase]) for clase in l_clases])
+    print(f"Número de ejemplos a dejar por clase: {n_ejs_clase_min}")
 
-    # Paso 2: Efectuo el balanceo segun la cantidad que debe tener cada clase (n_ejs_clase_min)
+    # Paso 2: Realizar el balanceo según la cantidad que debe tener cada clase (n_ejs_clase_min)
     for clase in l_clases:
 
-        # Obtengo registros de la clase segun n_ejs_clase_min
-        df_clase_bal = df[df[var_resp] == clase][:n_ejs_clase_min]
+        # Obtener registros de la clase según n_ejs_clase_min
+        df_clase_bal = df[df[y.name] == clase][:n_ejs_clase_min]
 
-        # Construyo nuevo dataset balanceado
-        df_bal = pd.concat([df_bal, df_clase_bal])
-        print(f"Clase: {clase}. Cantidad de valores inicial: {len(df[df[var_resp] == clase])}. Cantidad de valores final: {len(df_clase_bal)}")
-    return df_bal
+        # Construir nuevo dataset balanceado
+        df_bal = pd.concat([df_bal, df_clase_bal], axis=0)
+        print(f"Clase: {clase}. Cantidad de valores inicial: {len(df[df[y.name] == clase])}. Cantidad de valores final: {len(df_clase_bal)}")
+
+    # Separar X e y del DataFrame balanceado
+    df_bal = df_bal.sample(frac=1).reset_index(drop=True) # Para evitar que queden misma clase en un fold de CV?
+    X_bal = df_bal.drop(columns=[y.name])
+    X_bal = X_bal.apply(lambda x: x.astype(int))
+    y_bal = df_bal[y.name].astype(int)
+    return X_bal, y_bal
 
 def categorize_numeric_columns(df):
     """
