@@ -30,18 +30,25 @@ class Crawler:
           """
         # Defino opciones del webdriver
         options = webdriver.ChromeOptions()
+        # options.add_argument("--window-size=1920,1080")  # nuevo
+        # options.add_argument('--ignore-certificate-errors') # nuevo
+        # options.add_argument('--allow-running-insecure-content') # nuevo
+        # options.add_argument("--proxy-server='direct://'") # nuevo
+        # options.add_argument("--proxy-bypass-list=*") # nuevo
         options.add_argument("start-maximized")
         options.add_argument("enable-automation")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-infobars")
+        options.add_argument("--disable-extensions")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-browser-side-navigation")
         options.add_argument("--disable-gpu")
         options.add_argument("--incognito")
         options.add_argument("--disable-popup-blocking")
 
-        if headless:
-            options.add_argument("--headless")  # Hace que no se abra un web browser en tu compu
+        options.headless = headless  # Al parecer funciona ok
+        # if headless:
+        #     options.add_argument("--headless")  # Hace que no se abra un web browser en tu compu
 
         # Si el usuario no paso un path para ejecutar el driver ejecutable (.exe)
         if path is None:
@@ -64,7 +71,7 @@ class Crawler:
         else:
             return False
 
-    def extract_tag(self, xpath, tag_inicial=None, attribute=None, text=False, sec_wait=5):  # Le falta 1) la posibilidad de haya mas de un xpath posible
+    def extract_tag(self, xpath, xpath_alt=None, tag_inicial=None, attribute=None, text=False, sec_wait=10, print_fail=True):
         """
         Extrae texto de un tag
         :param xpath: XPATH del tag del cual extraer datos
@@ -73,17 +80,29 @@ class Crawler:
         :param text: True para extraer texto del tag
         :return: String. En caso que falle la extraccion, None
         """
-        tag_inic = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
+        tag_inicial = self.driver if tag_inicial is None else tag_inicial  # Tag desde el que buscar el xpath
+        xpaths = [xpath] if xpath_alt is None else [xpath, xpath_alt]
 
-        try:
-            tag_res = WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_element_located((By.XPATH, xpath)))
-            return tag_res.text if text is True else tag_res.get_attribute(attribute) if attribute is not None else tag_res
+        for xpath_expr in xpaths:
+            attempts = 0
+            max_attempts = 3
 
-        except TimeoutException:  # NoSuchElementException se usa cuando no hay WebDriverWait
+            while attempts < max_attempts:
+                try:
+                    tag_res = WebDriverWait(tag_inicial, sec_wait).until(EC.presence_of_element_located((By.XPATH, xpath_expr)))
+                    return tag_res.text if text else tag_res.get_attribute(attribute) if attribute is not None else tag_res
+                except StaleElementReferenceException:
+                    attempts += 1
+                    print(f"Se produjo una excepción StaleElementReferenceException. Intento {attempts}/{max_attempts}")
+                    sleep(1)
+                except TimeoutException:
+                    break  # Salir del bucle si se alcanza el tiempo de espera máximo
+
+        if print_fail:
             print(f"Fallo la extraccion del campo. Probablemente no exista el xpath {xpath}")
-            return None
+        return None
 
-    def extract_tags(self, xpath, tag_inicial=None, sec_wait=5):
+    def extract_tags(self, xpath, tag_inicial=None, sec_wait=10, print_fail=True):
         """
         Encuentra todos los tags segun el xpath
         :param xpath: XPATH de los tags
@@ -96,7 +115,8 @@ class Crawler:
             return WebDriverWait(tag_inic, sec_wait).until(EC.presence_of_all_elements_located((By.XPATH, xpath)))
 
         except TimeoutException:
-            print(f"Fallo la extraccion de tags. Probablemente no exista el xpath {xpath}")
+            if print_fail:
+                print(f"Fallo la extraccion de tags. Probablemente no exista el xpath {xpath}")
             return []  # Si devuelvo None y el usuario itera sobre el return, dara el error: TypeError: 'NoneType' object is not iterable
 
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
