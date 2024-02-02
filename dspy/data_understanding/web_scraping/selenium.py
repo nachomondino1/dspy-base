@@ -58,10 +58,10 @@ class Crawler:
             driver = webdriver.Chrome(executable_path=path, options=options)
         return driver
 
-    def click_boton(self, boton):
+    def click_boton(self, boton, sec_wait=10):
         if boton is not None:
             try:
-                WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(boton))
+                WebDriverWait(self.driver, sec_wait).until(EC.element_to_be_clickable(boton))
                 boton.click()
             except (StaleElementReferenceException, TimeoutException, ElementClickInterceptedException):
                 try:
