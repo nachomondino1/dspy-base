@@ -14,9 +14,14 @@ from googletrans import Translator
 class Crawler:
     """ It contains all the actions that the bot can perform from accepting cookies to clicking on the next one. """
 
-    def __init__(self, headless, path):
+    def __init__(self, headless, path, browser="Chrome"):
         """Initialize attributes of the parent class."""
-        self.driver = self.inicialize_chrome_driver(headless, path)
+        if browser == "Chrome":
+            self.driver = self.inicialize_chrome_driver(headless, path)
+        elif browser == "Firefox":
+            self.driver = self.initialize_firefox_driver(headless)
+        else:
+            self.driver = self.initialize_safari_driver()
 
     def inicialize_chrome_driver(self, headless=True, path=None):
         """
