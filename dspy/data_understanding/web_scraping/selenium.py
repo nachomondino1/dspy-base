@@ -20,8 +20,10 @@ class Crawler:
             self.driver = self.inicialize_chrome_driver(headless, path)
         elif browser == "Firefox":
             self.driver = self.initialize_firefox_driver(headless)
-        else:
+        elif browser == "Safari":
             self.driver = self.initialize_safari_driver()
+        else:
+            print("La libreria no posee ese browser")
 
     def inicialize_chrome_driver(self, headless=True, path=None):
         """
