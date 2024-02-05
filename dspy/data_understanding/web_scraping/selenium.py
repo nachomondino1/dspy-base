@@ -14,10 +14,10 @@ from googletrans import Translator
 class Crawler:
     """ It contains all the actions that the bot can perform from accepting cookies to clicking on the next one. """
 
-    def __init__(self, headless, path, browser="Chrome"):
+    def __init__(self, headless, browser="Chrome", version=None):
         """Initialize attributes of the parent class."""
         if browser == "Chrome":
-            self.driver = self.inicialize_chrome_driver(headless, path)
+            self.driver = self.inicialize_chrome_driver(headless, chrome_version=version)
         elif browser == "Firefox":
             self.driver = self.initialize_firefox_driver(headless)
         elif browser == "Safari":
@@ -25,7 +25,7 @@ class Crawler:
         else:
             print("La libreria no posee ese browser")
 
-    def inicialize_chrome_driver(self, headless=True, path=None):
+    def inicialize_chrome_driver(self, headless=True, chrome_version=None):
         """
           Initialize a Chrome WebDriver.
 
@@ -55,12 +55,15 @@ class Crawler:
         options.add_argument("--disable-popup-blocking")
         options.headless = headless  # Al parecer funciona ok
 
-        # Si el usuario no paso un path para ejecutar el driver ejecutable (.exe)
-        if path is None:
-            # Inicializo el webdriver (Defino a Chrome como Web Browser)
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        # Inicializo el webdriver (Defino a Chrome como Web Browser)
+        if chrome_version:
+            # Especifica la versión de Chrome deseada
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager(driver_version=chrome_version).install()), options=options)
+
         else:
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+
         return driver
 
     def initialize_safari_driver(self):
