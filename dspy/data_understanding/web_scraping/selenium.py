@@ -60,7 +60,7 @@ class Crawler:
             # Inicializo el webdriver (Defino a Chrome como Web Browser)
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         else:
-            driver = webdriver.Chrome(executable_path=path, options=options)
+            driver = webdriver.Chrome(options=options)
         return driver
 
     def initialize_safari_driver(self):
