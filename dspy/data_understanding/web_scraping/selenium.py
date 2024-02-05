@@ -51,8 +51,7 @@ class Crawler:
         # Si el usuario no paso un path para ejecutar el driver ejecutable (.exe)
         if path is None:
             # Inicializo el webdriver (Defino a Chrome como Web Browser)
-            # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-            driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         else:
             driver = webdriver.Chrome(executable_path=path, options=options)
         return driver
@@ -73,7 +72,7 @@ class Crawler:
         options.add_argument("--disable-popup-blocking")  # Deshabilitar el bloqueo de ventanas emergentes
         options.headless = headless  # Modo sin cabeza (equivalente a --headless en Chrome)
 
-        driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options)
+        driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
         return driver
 
     def click_boton(self, boton, sec_wait=10):
