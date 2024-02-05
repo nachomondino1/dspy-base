@@ -1,10 +1,11 @@
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException, StaleElementReferenceException
-from webdriver_manager.chrome import ChromeDriverManager
 import random
 from time import sleep
 from googletrans import Translator
@@ -30,7 +31,7 @@ class Crawler:
           """
         # Defino opciones del webdriver
         options = webdriver.ChromeOptions()
-        # options.add_argument("--window-size=1920,1080")  # nuevo
+        options.add_argument("--window-size=1920,1080")  # nuevo
         # options.add_argument('--ignore-certificate-errors') # nuevo
         # options.add_argument('--allow-running-insecure-content') # nuevo
         # options.add_argument("--proxy-server='direct://'") # nuevo
@@ -45,17 +46,34 @@ class Crawler:
         options.add_argument("--disable-gpu")
         options.add_argument("--incognito")
         options.add_argument("--disable-popup-blocking")
-
         options.headless = headless  # Al parecer funciona ok
-        # if headless:
-        #     options.add_argument("--headless")  # Hace que no se abra un web browser en tu compu
 
         # Si el usuario no paso un path para ejecutar el driver ejecutable (.exe)
         if path is None:
             # Inicializo el webdriver (Defino a Chrome como Web Browser)
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
         else:
             driver = webdriver.Chrome(executable_path=path, options=options)
+        return driver
+
+    def initialize_safari_driver(self):
+        driver = webdriver.Safari()
+        return driver
+
+    def initialize_firefox_driver(self, headless=True):
+
+        options = webdriver.FirefoxOptions()
+        options.add_argument("--width=1920")  # Ancho de la ventana (equivalente a --window-size en Chrome)
+        options.add_argument("--height=1080")  # Altura de la ventana (equivalente a --window-size en Chrome)
+        options.add_argument("--start-maximized")  # Iniciar maximizado
+        options.add_argument("--disable-infobars")  # Deshabilitar las barras de información
+        options.add_argument("--disable-extensions")  # Deshabilitar extensiones
+        options.add_argument("--private")  # Modo incógnito (equivalente a --incognito en Chrome)
+        options.add_argument("--disable-popup-blocking")  # Deshabilitar el bloqueo de ventanas emergentes
+        options.headless = headless  # Modo sin cabeza (equivalente a --headless en Chrome)
+
+        driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options)
         return driver
 
     def click_boton(self, boton, sec_wait=10):
