@@ -14,10 +14,10 @@ from googletrans import Translator
 class Crawler:
     """ It contains all the actions that the bot can perform from accepting cookies to clicking on the next one. """
 
-    def __init__(self, headless, browser="Chrome", version=None):
+    def __init__(self, headless, path=None, browser="Chrome"):
         """Initialize attributes of the parent class."""
         if browser == "Chrome":
-            self.driver = self.inicialize_chrome_driver(headless, chrome_version=version)
+            self.driver = self.inicialize_chrome_driver(headless, path)
         elif browser == "Firefox":
             self.driver = self.initialize_firefox_driver(headless)
         elif browser == "Safari":
@@ -25,7 +25,7 @@ class Crawler:
         else:
             print("La libreria no posee ese browser")
 
-    def inicialize_chrome_driver(self, headless=True, chrome_version=None):
+    def inicialize_chrome_driver(self, headless=True, path=None):
         """
           Initialize a Chrome WebDriver.
 
@@ -55,15 +55,13 @@ class Crawler:
         options.add_argument("--disable-popup-blocking")
         options.headless = headless  # Al parecer funciona ok
 
-        # Inicializo el webdriver (Defino a Chrome como Web Browser)
-        if chrome_version:
-            # Especifica la versión de Chrome deseada
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager(driver_version=chrome_version).install()), options=options)
-
+        if path is None:
+            service = ChromeDriverManager().install()  # ChromeDriverManager(driver_version=chrome_version).install())
         else:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            service = path
 
-
+        # Inicializo el webdriver (Defino a Chrome como Web Browser)
+        driver = webdriver.Chrome(service=Service(service), options=options)
         return driver
 
     def initialize_safari_driver(self):
@@ -84,19 +82,6 @@ class Crawler:
 
         driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
         return driver
-
-    def click_boton(self, boton, sec_wait=10):
-        if boton is not None:
-            try:
-                WebDriverWait(self.driver, sec_wait).until(EC.element_to_be_clickable(boton))
-                boton.click()
-            except (StaleElementReferenceException, TimeoutException, ElementClickInterceptedException):
-                try:
-                    self.driver.execute_script("arguments[0].click()", boton)
-                except:
-                    return False
-        else:
-            return False
 
     def extract_tag(self, xpath, xpath_alt=None, tag_inicial=None, attribute=None, text=False, sec_wait=10, print_fail=True):
         """
@@ -146,6 +131,25 @@ class Crawler:
                 print(f"Fallo la extraccion de tags. Probablemente no exista el xpath {xpath}")
             return []  # Si devuelvo None y el usuario itera sobre el return, dara el error: TypeError: 'NoneType' object is not iterable
 
+    def click_boton(self, tag_boton, sec_wait=10):
+        """
+
+        :param tag_boton: Selenium Web Element. Tag HTML (y no xpath) sobre el cual hacer click.
+        :param sec_wait: Integer. Espera maxima para encontrar el boton y hacer click.
+        :return:
+        """
+        if tag_boton is not None:
+            try:
+                WebDriverWait(self.driver, sec_wait).until(EC.element_to_be_clickable(tag_boton))
+                tag_boton.click()
+            except (StaleElementReferenceException, TimeoutException, ElementClickInterceptedException):
+                try:
+                    self.driver.execute_script("arguments[0].click()", tag_boton)
+                except:
+                    return False
+        else:
+            return False
+
     # Forma 1: Boton aceptar cookies OCULT0 en tag #shadow-root
     def accept_cookies_in_shadow_tag(self, xpath_shadow_parent, xpath_boton):
         """
@@ -159,7 +163,8 @@ class Crawler:
         shadow_root = self.driver.execute_script('return arguments[0].shadowRoot', shadow_parent)
 
         # Ubico el botón "Aceptar cookies" y lo clikeo
-        self.click_boton(tag_inicial=shadow_root, xpath=xpath_boton)
+        tag_boton = self.extract_tag(tag_inicial=shadow_root, xpath=xpath_boton)
+        self.click_boton(tag_boton)
 
     # Forma 2: Boton aceptar cookies OCULT0 en tag #document
     def accept_cookies_in_document_tag(self, xpath_document_parent, xpath_boton):
@@ -173,7 +178,8 @@ class Crawler:
         self.driver.switch_to.frame(iframe)
 
         # Ubico el botón "Aceptar cookies" y lo clikeo
-        self.click_boton(xpath=xpath_boton)
+        tag_boton = self.extract_tag(xpath=xpath_boton)
+        self.click_boton(tag_boton)
 
     def login_website(self, user, password, xpath_user, xpath_pass, xpath_boton_login, xpath_boton_validate_user=None):
         """
@@ -187,14 +193,16 @@ class Crawler:
         if xpath_boton_validate_user is not None:
 
             # Localizo el boton que valida el usuario y lo clickeo
-            self.click_boton(xpath=xpath_boton_validate_user)
+            tag_boton = self.extract_tag(xpath=xpath_boton_validate_user)
+            self.click_boton(tag_boton)
 
         # Busco tag input para la pass y escribo la pass
         pass_input = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath_pass)))
         pass_input.send_keys(password)
 
         # Localizo el boton "Iniciar sesion" y lo clickeo
-        self.click_boton(xpath=xpath_boton_login)
+        tag_boton = self.extract_tag(xpath=xpath_boton_login)
+        self.click_boton(tag_boton)
 
     def scroll_down(self):
         """
